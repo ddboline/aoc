@@ -1,10 +1,10 @@
-use anyhow::{Error, format_err};
+use anyhow::Error;
 use clap::Parser;
-use std::fs;
-use std::path::{Path, PathBuf};
-use std::collections::HashSet;
 use itertools::Itertools;
 use smallvec::SmallVec;
+use std::collections::HashSet;
+use std::fs;
+use std::path::{Path, PathBuf};
 
 #[derive(Parser)]
 struct Input {
@@ -24,23 +24,22 @@ fn main() -> Result<(), Error> {
 fn simple_iterator(p: &Path) -> Result<u64, Error> {
     let buf = fs::read_to_string(p)?;
 
-    let total_priority = buf.split('\n').map(|s| {
-        let (left, right) = split_elements(s);
-        let common = common_element(left, right);
-        common.and_then(get_priority).unwrap_or(0)
-    }).sum();
+    let total_priority = buf
+        .split('\n')
+        .map(|s| {
+            let (left, right) = split_elements(s);
+            let common = common_element(left, right);
+            common.and_then(get_priority).unwrap_or(0)
+        })
+        .sum();
     Ok(total_priority)
 }
 
 fn get_priority(c: char) -> Option<u64> {
     match c {
-        'a'..='z' => {
-            Some(c as u64 - 'a' as u64 + 1)
-        },
-        'A'..='Z' => {
-            Some(c as u64 - 'A' as u64 + 27)
-        },
-        _ => None
+        'a'..='z' => Some(c as u64 - 'a' as u64 + 1),
+        'A'..='Z' => Some(c as u64 - 'A' as u64 + 27),
+        _ => None,
     }
 }
 
@@ -51,7 +50,7 @@ fn split_elements<'a>(s: &'a str) -> (&'a str, &'a str) {
 }
 
 fn common_element(left: &str, right: &str) -> Option<char> {
-    let l: HashSet<char>  = left.chars().collect();
+    let l: HashSet<char> = left.chars().collect();
     let r: HashSet<char> = right.chars().collect();
     l.intersection(&r).copied().next()
 }
@@ -69,14 +68,21 @@ fn common_element2(e0: &str, e1: &str, e2: &str) -> Option<char> {
 fn simple_iterator2(p: &Path) -> Result<u64, Error> {
     let buf = fs::read_to_string(p)?;
 
-    let total_priority = buf.split('\n').chunks(3).into_iter().map(|chunk| {
-        let elfs: SmallVec<[&str; 3]> = chunk.collect();
-        if elfs.len() == 3 {
-            common_element2(elfs[0], elfs[1], elfs[2]).and_then(get_priority).unwrap_or(0)
-        } else {
-            0
-        }
-    }).sum();
+    let total_priority = buf
+        .split('\n')
+        .chunks(3)
+        .into_iter()
+        .map(|chunk| {
+            let elfs: SmallVec<[&str; 3]> = chunk.collect();
+            if elfs.len() == 3 {
+                common_element2(elfs[0], elfs[1], elfs[2])
+                    .and_then(get_priority)
+                    .unwrap_or(0)
+            } else {
+                0
+            }
+        })
+        .sum();
     Ok(total_priority)
 }
 
@@ -114,10 +120,36 @@ mod tests {
 
     #[test]
     fn test_common_element2() {
-        assert_eq!(common_element2("vJrwpWtwJgWrhcsFMMfFFhFp", "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL", "PmmdzqPrVvPwwTWBwg"), Some('r'));
-        assert_eq!(common_element2("wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn", "ttgJtRGJQctTZtZT", "CrZsJsPPZsGzwwsLwLmpwMDw"), Some('Z'));
-        let p0 = common_element2("vJrwpWtwJgWrhcsFMMfFFhFp", "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL", "PmmdzqPrVvPwwTWBwg").and_then(get_priority).unwrap_or(0);
-        let p1 = common_element2("wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn", "ttgJtRGJQctTZtZT", "CrZsJsPPZsGzwwsLwLmpwMDw").and_then(get_priority).unwrap_or(0);
+        assert_eq!(
+            common_element2(
+                "vJrwpWtwJgWrhcsFMMfFFhFp",
+                "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
+                "PmmdzqPrVvPwwTWBwg"
+            ),
+            Some('r')
+        );
+        assert_eq!(
+            common_element2(
+                "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn",
+                "ttgJtRGJQctTZtZT",
+                "CrZsJsPPZsGzwwsLwLmpwMDw"
+            ),
+            Some('Z')
+        );
+        let p0 = common_element2(
+            "vJrwpWtwJgWrhcsFMMfFFhFp",
+            "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
+            "PmmdzqPrVvPwwTWBwg",
+        )
+        .and_then(get_priority)
+        .unwrap_or(0);
+        let p1 = common_element2(
+            "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn",
+            "ttgJtRGJQctTZtZT",
+            "CrZsJsPPZsGzwwsLwLmpwMDw",
+        )
+        .and_then(get_priority)
+        .unwrap_or(0);
         assert_eq!(p0 + p1, 70);
     }
 }
