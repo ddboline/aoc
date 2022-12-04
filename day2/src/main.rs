@@ -1,11 +1,11 @@
-use anyhow::{Error, format_err};
+use anyhow::{format_err, Error};
 use clap::Parser;
-use std::fs;
-use std::path::{Path, PathBuf};
-use std::convert::TryFrom;
-use std::cmp::Ordering;
-use std::io::{BufRead, BufReader};
 use smallvec::SmallVec;
+use std::cmp::Ordering;
+use std::convert::TryFrom;
+use std::fs;
+use std::io::{BufRead, BufReader};
+use std::path::{Path, PathBuf};
 
 #[derive(Parser)]
 struct Input {
@@ -40,7 +40,7 @@ impl TryFrom<char> for RPS {
             'A' | 'X' => Ok(Self::Rock),
             'B' | 'Y' => Ok(Self::Paper),
             'C' | 'Z' => Ok(Self::Scissors),
-            _ => Err(format_err!("Bad char"))
+            _ => Err(format_err!("Bad char")),
         }
     }
 }
@@ -138,20 +138,16 @@ impl TryFrom<char> for WLD {
 fn choose_play(play0: RPS, result: WLD) -> RPS {
     match result {
         WLD::Draw => play0,
-        WLD::Lose => {
-            match play0 {
-                RPS::Rock => RPS::Scissors,
-                RPS::Paper => RPS::Rock,
-                RPS::Scissors => RPS::Paper,
-            }
+        WLD::Lose => match play0 {
+            RPS::Rock => RPS::Scissors,
+            RPS::Paper => RPS::Rock,
+            RPS::Scissors => RPS::Paper,
         },
-        WLD::Win => {
-            match play0 {
-                RPS::Rock => RPS::Paper,
-                RPS::Paper => RPS::Scissors,
-                RPS::Scissors => RPS::Rock,
-            }
-        }
+        WLD::Win => match play0 {
+            RPS::Rock => RPS::Paper,
+            RPS::Paper => RPS::Scissors,
+            RPS::Scissors => RPS::Rock,
+        },
     }
 }
 
@@ -196,8 +192,17 @@ mod tests {
 
     #[test]
     fn test_calculate_score2() {
-        assert_eq!(calculate_score(RPS::Rock, choose_play(RPS::Rock, WLD::Draw)), 4);
-        assert_eq!(calculate_score(RPS::Paper, choose_play(RPS::Paper, WLD::Lose)), 1);
-        assert_eq!(calculate_score(RPS::Scissors, choose_play(RPS::Scissors, WLD::Win)), 7);
+        assert_eq!(
+            calculate_score(RPS::Rock, choose_play(RPS::Rock, WLD::Draw)),
+            4
+        );
+        assert_eq!(
+            calculate_score(RPS::Paper, choose_play(RPS::Paper, WLD::Lose)),
+            1
+        );
+        assert_eq!(
+            calculate_score(RPS::Scissors, choose_play(RPS::Scissors, WLD::Win)),
+            7
+        );
     }
 }
