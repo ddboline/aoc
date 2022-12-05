@@ -4,6 +4,7 @@ use itertools::Itertools;
 use smallvec::SmallVec;
 use std::collections::HashSet;
 use std::fs;
+use std::io::{BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
 
 #[derive(Parser)]
@@ -16,7 +17,12 @@ fn main() -> Result<(), Error> {
 
     let total_priority = simple_iterator(&opts.input)?;
     println!("total priority {total_priority}");
+    let total_priority = use_bufreader(&opts.input)?;
+    println!("total priority {total_priority}");
+
     let total_priority = simple_iterator2(&opts.input)?;
+    println!("total priority {total_priority}");
+    let total_priority = use_bufreader2(&opts.input)?;
     println!("total priority {total_priority}");
     Ok(())
 }
@@ -35,6 +41,45 @@ fn simple_iterator(p: &Path) -> Result<u64, Error> {
     Ok(total_priority)
 }
 
+fn use_bufreader(p: &Path) -> Result<u64, Error> {
+    let f = fs::File::open(p)?;
+    let mut it = BufReadIter::new(f);
+    let total_score = it.try_fold(0, |total_score, result| {
+        result.map(|priority| total_score + priority.and_then(get_priority).unwrap_or(0))
+    })?;
+    Ok(total_score)
+}
+
+struct BufReadIter<T: Read> {
+    reader: BufReader<T>,
+    line: String,
+}
+
+impl<T: Read> BufReadIter<T> {
+    fn new(read: T) -> Self {
+        Self {
+            reader: BufReader::new(read),
+            line: String::new(),
+        }
+    }
+}
+
+impl<T: Read> Iterator for BufReadIter<T> {
+    type Item = Result<Option<char>, Error>;
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.reader.read_line(&mut self.line) {
+            Ok(0) => None,
+            Ok(_) => {
+                let (left, right) = split_elements(self.line.trim());
+                let common = common_element(left, right);
+                self.line.clear();
+                Some(Ok(common))
+            }
+            Err(e) => Some(Err(e.into())),
+        }
+    }
+}
+
 fn get_priority(c: char) -> Option<u64> {
     match c {
         'a'..='z' => Some(c as u64 - 'a' as u64 + 1),
@@ -43,7 +88,7 @@ fn get_priority(c: char) -> Option<u64> {
     }
 }
 
-fn split_elements<'a>(s: &'a str) -> (&'a str, &'a str) {
+fn split_elements(s: &str) -> (&str, &str) {
     assert!(s.len() % 2 == 0, "Cannot handle this");
     let split = s.len() / 2;
     (&s[..split], &s[split..])
@@ -59,8 +104,12 @@ fn common_element2(e0: &str, e1: &str, e2: &str) -> Option<char> {
     let e0: HashSet<char> = e0.chars().collect();
     let e1: HashSet<char> = e1.chars().collect();
     let e2: HashSet<char> = e2.chars().collect();
-    let e01: HashSet<char> = e0.intersection(&e1).copied().collect();
-    let e12: HashSet<char> = e1.intersection(&e2).copied().collect();
+    _common_element2(&e0, &e1, &e2)
+}
+
+fn _common_element2(e0: &HashSet<char>, e1: &HashSet<char>, e2: &HashSet<char>) -> Option<char> {
+    let e01: HashSet<char> = e0.intersection(e1).copied().collect();
+    let e12: HashSet<char> = e1.intersection(e2).copied().collect();
     assert!(e01.intersection(&e12).count() == 1);
     e01.intersection(&e12).copied().next()
 }
@@ -84,6 +133,53 @@ fn simple_iterator2(p: &Path) -> Result<u64, Error> {
         })
         .sum();
     Ok(total_priority)
+}
+
+fn use_bufreader2(p: &Path) -> Result<u64, Error> {
+    let f = fs::File::open(p)?;
+    let it = BufReadIter2::new(f);
+    let total_priority = it
+        .chunks(3)
+        .into_iter()
+        .try_fold(0, |total_priority, chunk| {
+            let result: Result<SmallVec<[HashSet<char>; 3]>, Error> = chunk.collect();
+            result.map(|elfs| {
+                total_priority
+                    + _common_element2(&elfs[0], &elfs[1], &elfs[2])
+                        .and_then(get_priority)
+                        .unwrap_or(0)
+            })
+        })?;
+    Ok(total_priority)
+}
+
+struct BufReadIter2<T: Read> {
+    reader: BufReader<T>,
+    line: String,
+}
+
+impl<T: Read> BufReadIter2<T> {
+    fn new(read: T) -> Self {
+        Self {
+            reader: BufReader::new(read),
+            line: String::new(),
+        }
+    }
+}
+
+impl<T: Read> Iterator for BufReadIter2<T> {
+    type Item = Result<HashSet<char>, Error>;
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.reader.read_line(&mut self.line) {
+            Ok(0) => None,
+            Ok(_) => {
+                let h: HashSet<char> = self.line.trim().chars().collect();
+                self.line.clear();
+                Some(Ok(h))
+            }
+            Err(e) => Some(Err(e.into())),
+        }
+    }
 }
 
 #[cfg(test)]
