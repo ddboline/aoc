@@ -4,7 +4,7 @@ use smallvec::SmallVec;
 use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::fs;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Read};
 use std::path::{Path, PathBuf};
 
 #[derive(Parser)]
@@ -106,14 +106,40 @@ fn simple_iterator(p: &Path) -> Result<u64, Error> {
 
 fn use_bufreader(p: &Path) -> Result<u64, Error> {
     let f = fs::File::open(p)?;
-    let mut buf = BufReader::new(f);
-    let mut line = String::new();
-    let mut total_score = 0;
-    while buf.read_line(&mut line)? > 0 {
-        total_score += get_score(&line).unwrap_or(0);
-        line.clear();
-    }
+    let mut it = BufReadIter::new(f);
+    let total_score = it.try_fold(0, |total_score, result| {
+        result.map(|score| total_score + score)
+    })?;
     Ok(total_score)
+}
+
+struct BufReadIter<T: Read> {
+    reader: BufReader<T>,
+    line: String,
+}
+
+impl<T: Read> BufReadIter<T> {
+    fn new(read: T) -> Self {
+        Self {
+            reader: BufReader::new(read),
+            line: String::new(),
+        }
+    }
+}
+
+impl<T: Read> Iterator for BufReadIter<T> {
+    type Item = Result<u64, Error>;
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.reader.read_line(&mut self.line) {
+            Ok(0) => None,
+            Ok(_) => {
+                let score = get_score(&self.line).unwrap_or(0);
+                self.line.clear();
+                Some(Ok(score))
+            }
+            Err(e) => Some(Err(e.into())),
+        }
+    }
 }
 
 #[derive(PartialEq, Clone, Copy, Debug)]
@@ -168,14 +194,40 @@ fn simple_iterator2(p: &Path) -> Result<u64, Error> {
 
 fn use_bufreader2(p: &Path) -> Result<u64, Error> {
     let f = fs::File::open(p)?;
-    let mut buf = BufReader::new(f);
-    let mut line = String::new();
-    let mut total_score = 0;
-    while buf.read_line(&mut line)? > 0 {
-        total_score += get_score2(&line).unwrap_or(0);
-        line.clear();
-    }
+    let mut it = BufReadIter2::new(f);
+    let total_score = it.try_fold(0, |total_score, result| {
+        result.map(|score| total_score + score)
+    })?;
     Ok(total_score)
+}
+
+struct BufReadIter2<T: Read> {
+    reader: BufReader<T>,
+    line: String,
+}
+
+impl<T: Read> BufReadIter2<T> {
+    fn new(read: T) -> Self {
+        Self {
+            reader: BufReader::new(read),
+            line: String::new(),
+        }
+    }
+}
+
+impl<T: Read> Iterator for BufReadIter2<T> {
+    type Item = Result<u64, Error>;
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.reader.read_line(&mut self.line) {
+            Ok(0) => None,
+            Ok(_) => {
+                let score = get_score2(&self.line).unwrap_or(0);
+                self.line.clear();
+                Some(Ok(score))
+            }
+            Err(e) => Some(Err(e.into())),
+        }
+    }
 }
 
 #[cfg(test)]
