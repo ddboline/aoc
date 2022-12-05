@@ -92,7 +92,7 @@ fn calculate_score(play0: RPS, play1: RPS) -> u64 {
 
 fn get_score(s: &str) -> Option<u64> {
     let chars: SmallVec<[char; 3]> = s.chars().collect();
-    let play0: RPS = (*chars.get(0)?).try_into().ok()?;
+    let play0: RPS = (*chars.first()?).try_into().ok()?;
     let play1: RPS = (*chars.get(2)?).try_into().ok()?;
     let score = calculate_score(play0, play1);
     Some(score)
@@ -179,7 +179,7 @@ fn choose_play(play0: RPS, result: WLD) -> RPS {
 
 fn get_score2(s: &str) -> Option<u64> {
     let chars: SmallVec<[char; 3]> = s.chars().collect();
-    let play0: RPS = (*chars.get(0)?).try_into().ok()?;
+    let play0: RPS = (*chars.first()?).try_into().ok()?;
     let cond: WLD = (*chars.get(2)?).try_into().ok()?;
     let play1 = choose_play(play0, cond);
     let score = calculate_score(play0, play1);
