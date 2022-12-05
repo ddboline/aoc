@@ -96,8 +96,13 @@ fn split_elements(s: &str) -> (&str, &str) {
 
 fn common_element(left: &str, right: &str) -> Option<char> {
     let l: HashSet<char> = left.chars().collect();
-    let r: HashSet<char> = right.chars().collect();
-    l.intersection(&r).copied().next()
+
+    let mut it = right.chars().filter(|c| l.contains(c));
+    let common_element = it.next();
+    while let Some(next_element) = it.next() {
+        assert_eq!(Some(next_element), common_element);
+    }
+    common_element
 }
 
 fn common_element2(e0: &str, e1: &str, e2: &str) -> Option<char> {
@@ -109,9 +114,13 @@ fn common_element2(e0: &str, e1: &str, e2: &str) -> Option<char> {
 
 fn _common_element2(e0: &HashSet<char>, e1: &HashSet<char>, e2: &HashSet<char>) -> Option<char> {
     let e01: HashSet<char> = e0.intersection(e1).copied().collect();
-    let e12: HashSet<char> = e1.intersection(e2).copied().collect();
-    assert!(e01.intersection(&e12).count() == 1);
-    e01.intersection(&e12).copied().next()
+
+    let mut it = e1.intersection(e2).filter(|c| e01.contains(c));
+    let common_element = it.next();
+    while let Some(next_element) = it.next() {
+        assert_eq!(Some(next_element), common_element);
+    }
+    common_element.copied()
 }
 
 fn simple_iterator2(p: &Path) -> Result<u64, Error> {
