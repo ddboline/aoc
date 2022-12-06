@@ -1,10 +1,8 @@
-use anyhow::{format_err, Error};
+use anyhow::Error;
 use clap::Parser;
-use itertools::Itertools;
 use smallvec::SmallVec;
 use std::fs;
 use std::path::PathBuf;
-use std::str::FromStr;
 
 #[derive(Parser)]
 struct Input {
@@ -26,7 +24,7 @@ fn find_marker<const L: usize>(buf: &[u8]) -> usize {
     let buf_len = buf.len();
     buf.windows(L)
         .enumerate()
-        .find(|(_, c)| check_uniqueness::<L>(*c))
+        .find(|(_, c)| check_uniqueness::<L>(c))
         .map_or(buf_len, |(i, _)| i + L)
 }
 
@@ -36,8 +34,10 @@ fn check_uniqueness<const L: usize>(v: &[u8]) -> bool {
     if v.len() != L {
         false
     } else {
-        for i in 0..L-1 {
-            if v[i] == v[i+1] {return false;}
+        for i in 0..L - 1 {
+            if v[i] == v[i + 1] {
+                return false;
+            }
         }
         true
     }
@@ -58,7 +58,7 @@ mod tests {
     }
 
     #[test]
-    fn test_find_start_message() -> Result<(), Error> { 
+    fn test_find_start_message() -> Result<(), Error> {
         assert_eq!(find_marker::<14>(b"mjqjpqmgbljsphdztnvjfqwrcgsmlb"), 19);
         assert_eq!(find_marker::<14>(b"bvwbjplbgvbhsrlpgdmjqwftvncz"), 23);
         assert_eq!(find_marker::<14>(b"nppdvjthqldpwncqszvftbrmjlhg"), 23);
