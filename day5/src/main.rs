@@ -15,14 +15,55 @@ fn main() -> Result<(), Error> {
     let opts = Input::parse();
 
     let buf = fs::read_to_string(opts.input)?;
-    let plane = process_buf(&buf)?;
-    println!("plane {}", plane.get_stack_top());
-    let plane = process_buf_9001(&buf)?;
-    println!("plane {}", plane.get_stack_top());
+    let mut plane_problem = PlaneProblem::from_buf(&buf)?;
+    plane_problem.solve()?;
+    println!("plane {}", plane_problem.stacks.get_stack_top());
+    let mut plane_problem = PlaneProblem::from_buf(&buf)?;
+    plane_problem.solve_9001()?;
+    println!("plane {}", plane_problem.stacks.get_stack_top());
     Ok(())
 }
 
-fn process_buf(buf: &str) -> Result<Plane, Error> {
+struct PlaneProblem {
+    stacks: Stacks,
+    instructions: Vec<MoveInstruction>,
+}
+
+impl PlaneProblem {
+    fn from_buf(buf: &str) -> Result<PlaneProblem, Error> {
+        let mut plane_buf = Vec::new();
+        let mut instructions = Vec::new();
+        for line in buf.split('\n') {
+            if line.starts_with("move") {
+                let instruction: MoveInstruction = line.parse()?;
+                instructions.push(instruction);
+            } else if !line.is_empty() {
+                plane_buf.push(line);
+            }
+        }
+        let stacks = Stacks::from_str(&plane_buf)?;
+        Ok(Self {
+            stacks,
+            instructions,
+        })
+    }
+
+    fn solve(&mut self) -> Result<(), Error> {
+        for i in &self.instructions {
+            self.stacks.process_move(*i);
+        }
+        Ok(())
+    }
+
+    fn solve_9001(&mut self) -> Result<(), Error> {
+        for i in &self.instructions {
+            self.stacks.process_move_9001(*i);
+        }
+        Ok(())
+    }
+}
+
+fn process_buf(buf: &str) -> Result<Stacks, Error> {
     let mut plane_buf = Vec::new();
     let mut instructions = Vec::new();
     for line in buf.split('\n') {
@@ -33,14 +74,14 @@ fn process_buf(buf: &str) -> Result<Plane, Error> {
             plane_buf.push(line);
         }
     }
-    let mut plane = Plane::from_str(&plane_buf)?;
+    let mut plane = Stacks::from_str(&plane_buf)?;
     for inst in instructions {
         plane.process_move(inst)?;
     }
     Ok(plane)
 }
 
-fn process_buf_9001(buf: &str) -> Result<Plane, Error> {
+fn process_buf_9001(buf: &str) -> Result<Stacks, Error> {
     let mut plane_buf = Vec::new();
     let mut instructions = Vec::new();
     for line in buf.split('\n') {
@@ -51,7 +92,7 @@ fn process_buf_9001(buf: &str) -> Result<Plane, Error> {
             plane_buf.push(line);
         }
     }
-    let mut plane = Plane::from_str(&plane_buf)?;
+    let mut plane = Stacks::from_str(&plane_buf)?;
     for inst in instructions {
         plane.process_move_9001(inst)?;
     }
@@ -59,9 +100,9 @@ fn process_buf_9001(buf: &str) -> Result<Plane, Error> {
 }
 
 #[derive(Debug)]
-struct Plane(Vec<Vec<char>>);
+struct Stacks(Vec<Vec<char>>);
 
-impl Plane {
+impl Stacks {
     fn get_stack_top(&self) -> String {
         self.0.iter().filter_map(|s| s.iter().last()).collect()
     }
@@ -123,7 +164,7 @@ impl Plane {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct MoveInstruction {
     ncrates: usize,
     from_stack: usize,
@@ -168,25 +209,28 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_process_buf() {
-
-        let plane = process_buf(TEST_BUF).unwrap();
+    fn test_process_buf() -> Result<(), Error> {
+        let mut plane_problem = PlaneProblem::from_buf(TEST_BUF)?;
+        plane_problem.solve()?;
 
         assert_eq!(
-            plane.0,
+            plane_problem.stacks.0,
             vec![vec!['C'], vec!['M'], vec!['P', 'D', 'N', 'Z']]
         );
-        assert_eq!(&plane.get_stack_top(), "CMZ");
+        assert_eq!(&plane_problem.stacks.get_stack_top(), "CMZ");
+        Ok(())
     }
 
     #[test]
-    fn test_process_buf_9001() {
-        let plane = process_buf_9001(TEST_BUF).unwrap();
+    fn test_process_buf_9001() -> Result<(), Error> {
+        let mut plane_problem = PlaneProblem::from_buf(TEST_BUF)?;
+        plane_problem.solve_9001()?;
 
         assert_eq!(
-            plane.0,
+            plane_problem.stacks.0,
             vec![vec!['M'], vec!['C'], vec!['P', 'Z', 'N', 'D']]
         );
-        assert_eq!(&plane.get_stack_top(), "MCD");
+        assert_eq!(&plane_problem.stacks.get_stack_top(), "MCD");
+        Ok(())
     }
 }
