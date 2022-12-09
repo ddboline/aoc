@@ -232,6 +232,8 @@ impl<T: Read> Iterator for BufReadIter2<T> {
 
 #[cfg(test)]
 mod tests {
+    use std::io::Cursor;
+
     use super::*;
 
     #[test]
@@ -256,5 +258,47 @@ mod tests {
             calculate_score(RPS::Scissors, choose_play(RPS::Scissors, WLD::Win)),
             7
         );
+    }
+
+    #[test]
+    fn test_score0() -> Result<(), Error> {
+        let buf = include_str!("../input.txt");
+        let total_score: u64 = buf.split('\n').filter_map(get_score).sum();
+        assert_eq!(total_score, 13565);
+        Ok(())
+    }
+
+    #[test]
+    fn test_score1() -> Result<(), Error> {
+        let buf = include_str!("../input.txt");
+        let v = buf.to_string();
+        let cursor = Cursor::new(v);
+        let mut it = BufReadIter::new(cursor);
+        let total_score = it.try_fold(0, |total_score, result| {
+            result.map(|score| total_score + score)
+        })?;
+        assert_eq!(total_score, 13565);
+        Ok(())
+    }
+
+    #[test]
+    fn test_score2() -> Result<(), Error> {
+        let buf = include_str!("../input.txt");
+        let total_score: u64 = buf.split('\n').filter_map(get_score2).sum();
+        assert_eq!(total_score, 12424);
+        Ok(())
+    }
+
+    #[test]
+    fn test_score3() -> Result<(), Error> {
+        let buf = include_str!("../input.txt");
+        let v = buf.to_string();
+        let cursor = Cursor::new(v);
+        let mut it = BufReadIter2::new(cursor);
+        let total_score = it.try_fold(0, |total_score, result| {
+            result.map(|score| total_score + score)
+        })?;
+        assert_eq!(total_score, 12424);
+        Ok(())
     }
 }

@@ -99,7 +99,7 @@ fn common_element(left: &str, right: &str) -> Option<char> {
 
     let mut it = right.chars().filter(|c| l.contains(c));
     let common_element = it.next();
-    while let Some(next_element) = it.next() {
+    for next_element in it {
         assert_eq!(Some(next_element), common_element);
     }
     common_element
@@ -117,7 +117,7 @@ fn _common_element2(e0: &HashSet<char>, e1: &HashSet<char>, e2: &HashSet<char>) 
 
     let mut it = e1.intersection(e2).filter(|c| e01.contains(c));
     let common_element = it.next();
-    while let Some(next_element) = it.next() {
+    for next_element in it {
         assert_eq!(Some(next_element), common_element);
     }
     common_element.copied()
@@ -193,6 +193,8 @@ impl<T: Read> Iterator for BufReadIter2<T> {
 
 #[cfg(test)]
 mod tests {
+    use std::io::Cursor;
+
     use super::*;
 
     #[test]
@@ -256,5 +258,78 @@ mod tests {
         .and_then(get_priority)
         .unwrap_or(0);
         assert_eq!(p0 + p1, 70);
+    }
+
+    #[test]
+    fn test_result0() -> Result<(), Error> {
+        let buf = include_str!("../input.txt");
+
+        let total_priority: u64 = buf
+            .split('\n')
+            .map(|s| {
+                let (left, right) = split_elements(s);
+                let common = common_element(left, right);
+                common.and_then(get_priority).unwrap_or(0)
+            })
+            .sum();
+        assert_eq!(total_priority, 7967);
+        Ok(())
+    }
+
+    #[test]
+    fn test_result1() -> Result<(), Error> {
+        let buf = include_str!("../input.txt");
+        let cursor = Cursor::new(buf.to_string());
+        let mut it = BufReadIter::new(cursor);
+        let total_score: u64 = it.try_fold(0, |total_score, result| {
+            result.map(|priority| total_score + priority.and_then(get_priority).unwrap_or(0))
+        })?;
+        assert_eq!(total_score, 7967);
+        Ok(())
+    }
+
+    #[test]
+    fn test_result2() -> Result<(), Error> {
+        let buf = include_str!("../input.txt");
+
+        let total_priority: u64 = buf
+            .split('\n')
+            .chunks(3)
+            .into_iter()
+            .map(|chunk| {
+                let elfs: SmallVec<[&str; 3]> = chunk.collect();
+                if elfs.len() == 3 {
+                    common_element2(elfs[0], elfs[1], elfs[2])
+                        .and_then(get_priority)
+                        .unwrap_or(0)
+                } else {
+                    0
+                }
+            })
+            .sum();
+        assert_eq!(total_priority, 2716);
+        Ok(())
+    }
+
+    #[test]
+    fn test_result3() -> Result<(), Error> {
+        let buf = include_str!("../input.txt");
+        let cursor = Cursor::new(buf.to_string());
+
+        let it = BufReadIter2::new(cursor);
+        let total_priority: u64 =
+            it.chunks(3)
+                .into_iter()
+                .try_fold(0, |total_priority, chunk| {
+                    let result: Result<SmallVec<[HashSet<char>; 3]>, Error> = chunk.collect();
+                    result.map(|elfs| {
+                        total_priority
+                            + _common_element2(&elfs[0], &elfs[1], &elfs[2])
+                                .and_then(get_priority)
+                                .unwrap_or(0)
+                    })
+                })?;
+        assert_eq!(total_priority, 2716);
+        Ok(())
     }
 }
