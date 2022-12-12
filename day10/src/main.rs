@@ -1,10 +1,8 @@
 use anyhow::{format_err, Error};
 use clap::Parser;
-use core::fmt;
-use smallvec::{SmallVec, smallvec};
+use smallvec::{smallvec, SmallVec};
 use std::fs;
-use std::io::{BufRead, BufReader, Read};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::str::FromStr;
 
 #[derive(Parser)]
@@ -21,7 +19,10 @@ fn main() -> Result<(), Error> {
     println!("signal_strength {signal_strength}");
 
     let result = program.draw();
-    let output: Vec<String> = result.into_iter().map(|v| v.into_iter().collect::<String>()).collect();
+    let output: Vec<String> = result
+        .into_iter()
+        .map(|v| v.into_iter().collect::<String>())
+        .collect();
     let output = output.join("\n");
     println!("{output}");
     Ok(())
@@ -37,13 +38,10 @@ struct Program(Vec<Instruction>);
 
 impl Program {
     fn from_str(buf: &str) -> Result<Self, Error> {
-        let instructions: Result<Vec<_>, Error> = buf.split('\n').filter_map(|s| {
-            if s.is_empty() {
-                None
-            } else {
-                Some(s.parse())
-            }
-        }).collect();
+        let instructions: Result<Vec<_>, Error> = buf
+            .split('\n')
+            .filter_map(|s| if s.is_empty() { None } else { Some(s.parse()) })
+            .collect();
         instructions.map(Self)
     }
 
@@ -55,11 +53,9 @@ impl Program {
                 if substate.tick >= 19 && (substate.tick - 19) % 40 == 0 {
                     let signal_strenth = (substate.tick as isize + 1) * substate.register_x;
                     total_signal_strength += signal_strenth;
-                    println!("state {substate:?} strength {signal_strenth}");
-                }    
+                }
             }
         }
-        println!("state {state:?}");
         total_signal_strength
     }
 
@@ -68,14 +64,14 @@ impl Program {
         let mut state = MachineState::new();
         let mut sprite_center = 1;
         for instruction in &self.0 {
-             for substate in state.process(*instruction) {
+            for substate in state.process(*instruction) {
                 let y_value = ((substate.tick - 1) / 40) % 6;
                 let x_value = (substate.tick - 1) % 40;
                 if x_value as isize >= sprite_center - 1 && x_value as isize <= sprite_center + 1 {
                     screen[y_value][x_value] = '#';
                 }
                 sprite_center = substate.register_x;
-             }
+            }
         }
         screen
     }
@@ -112,7 +108,7 @@ impl FromStr for Instruction {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let line: SmallVec<[&str; 2]> = s.split(' ').take(2).collect();
         let value: Option<isize> = line.get(1).and_then(|s| s.parse().ok());
-        match line.get(0) {
+        match line.first() {
             Some(&"noop") => Ok(Self::Noop),
             Some(&"addx") => {
                 if let Some(v) = value {
@@ -146,7 +142,6 @@ mod tests {
             }
             let instruction: Instruction = line.parse()?;
             machine.process(instruction);
-            println!("state {machine:?}");
             for (etick, ereg) in expected_state {
                 if machine.tick == etick {
                     assert_eq!(machine.register_x, ereg);
