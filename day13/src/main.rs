@@ -17,11 +17,13 @@ fn main() -> Result<(), Error> {
     let packets = Packets::from_str(&buf)?;
     let total = packets.sum_of_indicies();
     println!("total {total}");
+    assert_eq!(total, 6415);
 
     let buf = format!("{buf}\n\n[[2]]\n[[6]]");
     let mut packets = Packets::from_str(&buf)?;
     let decoder_key = packets.find_decoder_key();
     println!("decoder_key {decoder_key}");
+    assert_eq!(decoder_key, 20056);
     Ok(())
 }
 
