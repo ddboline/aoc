@@ -17,11 +17,13 @@ fn main() -> Result<(), Error> {
     println!("Max elf: {index}, Max calories {cals}");
     let CalIndex { index, cals } = use_bufreader(&opts.input)?;
     println!("Max elf: {index}, Max calories {cals}");
+    assert_eq!(cals, 74394);
 
     let cals = simple_iterator3(&opts.input)?;
     println!("Max calories {cals}");
     let cals = use_bufreader3(&opts.input)?;
     println!("Max calories {cals}");
+    assert_eq!(cals, 212836);
     Ok(())
 }
 
