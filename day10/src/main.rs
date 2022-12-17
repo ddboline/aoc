@@ -17,6 +17,7 @@ fn main() -> Result<(), Error> {
     let program = Program::from_str(&buf)?;
     let signal_strength = program.get_signal_strength();
     println!("signal_strength {signal_strength}");
+    assert_eq!(signal_strength, 14340);
 
     let result = program.draw();
     let output: Vec<String> = result
@@ -25,8 +26,18 @@ fn main() -> Result<(), Error> {
         .collect();
     let output = output.join("\n");
     println!("{output}");
+    assert_eq!(&output, EXPECTED.trim());
     Ok(())
 }
+
+static EXPECTED: &str = "
+###...##..###....##..##..###..#..#.###..
+#..#.#..#.#..#....#.#..#.#..#.#..#.#..#.
+#..#.#..#.#..#....#.#....###..####.#..#.
+###..####.###.....#.#....#..#.#..#.###..
+#....#..#.#....#..#.#..#.#..#.#..#.#....
+#....#..#.#.....##...##..###..#..#.#....
+";
 
 #[derive(Clone, Copy)]
 enum Instruction {

@@ -15,8 +15,10 @@ fn main() -> Result<(), Error> {
 
     let overlaps = simple_iterator(&opts.input)?;
     println!("overlaps {overlaps}");
+    assert_eq!(overlaps, 441);
     let overlaps = simple_iterator2(&opts.input)?;
     println!("overlaps {overlaps}");
+    assert_eq!(overlaps, 861);
     Ok(())
 }
 

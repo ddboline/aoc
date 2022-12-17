@@ -15,8 +15,10 @@ fn main() -> Result<(), Error> {
     let grid = TreeGrid::from_str(&buf);
     let n_visible = grid.number_visible();
     println!("n_visible {n_visible}");
+    assert_eq!(n_visible, 1820);
     let max_score = grid.maximum_visibility_score();
     println!("max score {max_score}");
+    assert_eq!(max_score, 385112);
     Ok(())
 }
 

@@ -15,8 +15,10 @@ fn main() -> Result<(), Error> {
     let buf = fs::read(opts.input)?;
     let index = find_marker::<4>(&buf);
     println!("start packet {index} / {}", buf.len());
+    assert_eq!(index, 1707);
     let index = find_marker::<14>(&buf);
     println!("start message {index} / {}", buf.len());
+    assert_eq!(index, 3697);
     Ok(())
 }
 

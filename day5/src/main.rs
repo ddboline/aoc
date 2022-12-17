@@ -17,10 +17,14 @@ fn main() -> Result<(), Error> {
     let buf = fs::read_to_string(opts.input)?;
     let mut plane_problem = PlaneProblem::from_buf(&buf)?;
     plane_problem.solve()?;
-    println!("plane {}", plane_problem.stacks.get_stack_top());
+    let stack_top = plane_problem.stacks.get_stack_top();
+    println!("plane {stack_top}");
+    assert_eq!(&stack_top, "TBVFVDZPN");
     let mut plane_problem = PlaneProblem::from_buf(&buf)?;
     plane_problem.solve_9001()?;
-    println!("plane {}", plane_problem.stacks.get_stack_top());
+    let stack_top = plane_problem.stacks.get_stack_top();
+    println!("plane {stack_top}");
+    assert_eq!(&stack_top, "VLCWHTDSZ");
     Ok(())
 }
 
@@ -50,53 +54,17 @@ impl PlaneProblem {
 
     fn solve(&mut self) -> Result<(), Error> {
         for i in &self.instructions {
-            self.stacks.process_move(*i);
+            self.stacks.process_move(*i)?;
         }
         Ok(())
     }
 
     fn solve_9001(&mut self) -> Result<(), Error> {
         for i in &self.instructions {
-            self.stacks.process_move_9001(*i);
+            self.stacks.process_move_9001(*i)?;
         }
         Ok(())
     }
-}
-
-fn process_buf(buf: &str) -> Result<Stacks, Error> {
-    let mut plane_buf = Vec::new();
-    let mut instructions = Vec::new();
-    for line in buf.split('\n') {
-        if line.starts_with("move") {
-            let instruction: MoveInstruction = line.parse()?;
-            instructions.push(instruction);
-        } else if !line.is_empty() {
-            plane_buf.push(line);
-        }
-    }
-    let mut plane = Stacks::from_str(&plane_buf)?;
-    for inst in instructions {
-        plane.process_move(inst)?;
-    }
-    Ok(plane)
-}
-
-fn process_buf_9001(buf: &str) -> Result<Stacks, Error> {
-    let mut plane_buf = Vec::new();
-    let mut instructions = Vec::new();
-    for line in buf.split('\n') {
-        if line.starts_with("move") {
-            let instruction: MoveInstruction = line.parse()?;
-            instructions.push(instruction);
-        } else if !line.is_empty() {
-            plane_buf.push(line);
-        }
-    }
-    let mut plane = Stacks::from_str(&plane_buf)?;
-    for inst in instructions {
-        plane.process_move_9001(inst)?;
-    }
-    Ok(plane)
 }
 
 #[derive(Debug)]
