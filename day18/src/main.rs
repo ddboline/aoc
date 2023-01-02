@@ -1,11 +1,10 @@
 use anyhow::Error;
 use clap::Parser;
-use maplit::hashset;
-use smallvec::{smallvec, SmallVec};
-use std::collections::{HashSet, HashMap};
+use maplit::hashmap;
+use smallvec::SmallVec;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::PathBuf;
-use maplit::hashmap;
 
 #[derive(Parser)]
 struct Input {
@@ -110,84 +109,72 @@ impl Grid {
         let mut tentative: HashMap<Position, usize> = hashmap! {point => 0};
         let mut current = point;
         let mut visited: HashSet<Position> = HashSet::new();
-        loop {
-            let current_distance = if let Some(d) = tentative.remove(&current) {d + 1} else {break};
-            let mut new_position = current.clone();
+        while let Some(current_distance) = tentative.remove(&current) {
+            let current_distance = current_distance + 1;
+            let mut new_position = current;
             new_position.x += 1;
-            if !self.grid.contains(&new_position) {
-                if !visited.contains(&new_position) {
-                    if let Some(distance) = tentative.get_mut(&new_position) {
-                        if *distance > current_distance {
-                            *distance = current_distance;
-                        }
-                    } else {
-                        tentative.insert(new_position, current_distance);
+            if !self.grid.contains(&new_position) && !visited.contains(&new_position) {
+                if let Some(distance) = tentative.get_mut(&new_position) {
+                    if *distance > current_distance {
+                        *distance = current_distance;
                     }
+                } else {
+                    tentative.insert(new_position, current_distance);
                 }
             }
-            let mut new_position = current.clone();
+            let mut new_position = current;
             new_position.x -= 1;
-            if !self.grid.contains(&new_position) {
-                if !visited.contains(&new_position) {
-                    if let Some(distance) = tentative.get_mut(&new_position) {
-                        if *distance > current_distance {
-                            *distance = current_distance;
-                        }
-                    } else {
-                        tentative.insert(new_position, current_distance);
+            if !self.grid.contains(&new_position) && !visited.contains(&new_position) {
+                if let Some(distance) = tentative.get_mut(&new_position) {
+                    if *distance > current_distance {
+                        *distance = current_distance;
                     }
+                } else {
+                    tentative.insert(new_position, current_distance);
                 }
             }
-            let mut new_position = current.clone();
+            let mut new_position = current;
             new_position.y += 1;
-            if !self.grid.contains(&new_position) {
-                if !visited.contains(&new_position) {
-                    if let Some(distance) = tentative.get_mut(&new_position) {
-                        if *distance > current_distance {
-                            *distance = current_distance;
-                        }
-                    } else {
-                        tentative.insert(new_position, current_distance);
+            if !self.grid.contains(&new_position) && !visited.contains(&new_position) {
+                if let Some(distance) = tentative.get_mut(&new_position) {
+                    if *distance > current_distance {
+                        *distance = current_distance;
                     }
+                } else {
+                    tentative.insert(new_position, current_distance);
                 }
             }
-            let mut new_position = current.clone();
+            let mut new_position = current;
             new_position.y -= 1;
-            if !self.grid.contains(&new_position) {
-                if !visited.contains(&new_position) {
-                    if let Some(distance) = tentative.get_mut(&new_position) {
-                        if *distance > current_distance {
-                            *distance = current_distance;
-                        }
-                    } else {
-                        tentative.insert(new_position, current_distance);
+            if !self.grid.contains(&new_position) && !visited.contains(&new_position) {
+                if let Some(distance) = tentative.get_mut(&new_position) {
+                    if *distance > current_distance {
+                        *distance = current_distance;
                     }
+                } else {
+                    tentative.insert(new_position, current_distance);
                 }
             }
-            let mut new_position = current.clone();
+            let mut new_position = current;
             new_position.z += 1;
-            if !self.grid.contains(&new_position) {
-                if !visited.contains(&new_position) {
-                    if let Some(distance) = tentative.get_mut(&new_position) {
-                        if *distance > current_distance {
-                            *distance = current_distance;
-                        }
-                    } else {
-                        tentative.insert(new_position, current_distance);
+            if !self.grid.contains(&new_position) && !visited.contains(&new_position) {
+                if let Some(distance) = tentative.get_mut(&new_position) {
+                    if *distance > current_distance {
+                        *distance = current_distance;
                     }
+                } else {
+                    tentative.insert(new_position, current_distance);
                 }
             }
-            let mut new_position = current.clone();
+            let mut new_position = current;
             new_position.z -= 1;
-            if !self.grid.contains(&new_position) {
-                if !visited.contains(&new_position) {
-                    if let Some(distance) = tentative.get_mut(&new_position) {
-                        if *distance > current_distance {
-                            *distance = current_distance;
-                        }
-                    } else {
-                        tentative.insert(new_position, current_distance);
+            if !self.grid.contains(&new_position) && !visited.contains(&new_position) {
+                if let Some(distance) = tentative.get_mut(&new_position) {
+                    if *distance > current_distance {
+                        *distance = current_distance;
                     }
+                } else {
+                    tentative.insert(new_position, current_distance);
                 }
             }
             visited.insert(current);
@@ -208,11 +195,13 @@ impl Grid {
             }
         }
         if visited.contains(&exterior_point) {
-            let mut exterior_points: HashSet<Position> = tentative.into_iter().map(|(p, d)| p).collect();
+            let mut exterior_points: HashSet<Position> =
+                tentative.into_iter().map(|(p, _)| p).collect();
             exterior_points.extend(visited);
             VisitedPositions::Exterior(exterior_points)
         } else {
-            let mut interior_points: HashSet<Position> = tentative.into_iter().map(|(p, d)| p).collect();
+            let mut interior_points: HashSet<Position> =
+                tentative.into_iter().map(|(p, _)| p).collect();
             interior_points.extend(visited);
             VisitedPositions::Interior(interior_points)
         }
@@ -223,7 +212,11 @@ impl Grid {
         let max_x = self.grid.iter().map(|p| p.x).max().unwrap();
         let max_y = self.grid.iter().map(|p| p.y).max().unwrap();
         let max_z = self.grid.iter().map(|p| p.z).max().unwrap();
-        let exterior_point = Position {x: max_x + 1, y: max_y + 1, z: max_z + 1};
+        let exterior_point = Position {
+            x: max_x + 1,
+            y: max_y + 1,
+            z: max_z + 1,
+        };
         let mut interior_points: HashSet<Position> = HashSet::new();
         let mut exterior_points: HashSet<Position> = HashSet::new();
 
@@ -232,9 +225,12 @@ impl Grid {
             new_position.x += 1;
             if exterior_points.contains(&new_position) {
                 exterior_surface_area += 1;
-            } else if !interior_points.contains(&new_position) && !self.grid.contains(&new_position) {
+            } else if !interior_points.contains(&new_position) && !self.grid.contains(&new_position)
+            {
                 match self.find_interior_points(new_position, exterior_point) {
-                    VisitedPositions::Interior(points) => {interior_points.extend(points);},
+                    VisitedPositions::Interior(points) => {
+                        interior_points.extend(points);
+                    }
                     VisitedPositions::Exterior(points) => {
                         exterior_points.extend(points);
                         exterior_surface_area += 1;
@@ -245,9 +241,12 @@ impl Grid {
             new_position.x -= 1;
             if exterior_points.contains(&new_position) {
                 exterior_surface_area += 1;
-            } else if !interior_points.contains(&new_position) && !self.grid.contains(&new_position) {
+            } else if !interior_points.contains(&new_position) && !self.grid.contains(&new_position)
+            {
                 match self.find_interior_points(new_position, exterior_point) {
-                    VisitedPositions::Interior(points) => {interior_points.extend(points);},
+                    VisitedPositions::Interior(points) => {
+                        interior_points.extend(points);
+                    }
                     VisitedPositions::Exterior(points) => {
                         exterior_points.extend(points);
                         exterior_surface_area += 1;
@@ -258,9 +257,12 @@ impl Grid {
             new_position.y += 1;
             if exterior_points.contains(&new_position) {
                 exterior_surface_area += 1;
-            } else if !interior_points.contains(&new_position) && !self.grid.contains(&new_position) {
+            } else if !interior_points.contains(&new_position) && !self.grid.contains(&new_position)
+            {
                 match self.find_interior_points(new_position, exterior_point) {
-                    VisitedPositions::Interior(points) => {interior_points.extend(points);},
+                    VisitedPositions::Interior(points) => {
+                        interior_points.extend(points);
+                    }
                     VisitedPositions::Exterior(points) => {
                         exterior_points.extend(points);
                         exterior_surface_area += 1;
@@ -271,9 +273,12 @@ impl Grid {
             new_position.y -= 1;
             if exterior_points.contains(&new_position) {
                 exterior_surface_area += 1;
-            } else if !interior_points.contains(&new_position) && !self.grid.contains(&new_position) {
+            } else if !interior_points.contains(&new_position) && !self.grid.contains(&new_position)
+            {
                 match self.find_interior_points(new_position, exterior_point) {
-                    VisitedPositions::Interior(points) => {interior_points.extend(points);},
+                    VisitedPositions::Interior(points) => {
+                        interior_points.extend(points);
+                    }
                     VisitedPositions::Exterior(points) => {
                         exterior_points.extend(points);
                         exterior_surface_area += 1;
@@ -284,9 +289,12 @@ impl Grid {
             new_position.z += 1;
             if exterior_points.contains(&new_position) {
                 exterior_surface_area += 1;
-            } else if !interior_points.contains(&new_position) && !self.grid.contains(&new_position) {
+            } else if !interior_points.contains(&new_position) && !self.grid.contains(&new_position)
+            {
                 match self.find_interior_points(new_position, exterior_point) {
-                    VisitedPositions::Interior(points) => {interior_points.extend(points);},
+                    VisitedPositions::Interior(points) => {
+                        interior_points.extend(points);
+                    }
                     VisitedPositions::Exterior(points) => {
                         exterior_points.extend(points);
                         exterior_surface_area += 1;
@@ -297,9 +305,12 @@ impl Grid {
             new_position.z -= 1;
             if exterior_points.contains(&new_position) {
                 exterior_surface_area += 1;
-            } else if !interior_points.contains(&new_position) && !self.grid.contains(&new_position) {
+            } else if !interior_points.contains(&new_position) && !self.grid.contains(&new_position)
+            {
                 match self.find_interior_points(new_position, exterior_point) {
-                    VisitedPositions::Interior(points) => {interior_points.extend(points);},
+                    VisitedPositions::Interior(points) => {
+                        interior_points.extend(points);
+                    }
                     VisitedPositions::Exterior(points) => {
                         exterior_points.extend(points);
                         exterior_surface_area += 1;
@@ -329,6 +340,7 @@ pub static TEST_DATA: &str = "
 #[cfg(test)]
 mod tests {
     use super::*;
+    use maplit::hashset;
 
     #[test]
     fn test() {
@@ -355,12 +367,16 @@ mod tests {
         let max_x = grid.grid.iter().map(|p| p.x).max().unwrap();
         let max_y = grid.grid.iter().map(|p| p.y).max().unwrap();
         let max_z = grid.grid.iter().map(|p| p.z).max().unwrap();
-        let exterior_point = Position {x: max_x + 1, y: max_y + 1, z: max_z + 1};
-        let point = Position {x: 2, y: 2, z: 5};
+        let exterior_point = Position {
+            x: max_x + 1,
+            y: max_y + 1,
+            z: max_z + 1,
+        };
+        let point = Position { x: 2, y: 2, z: 5 };
         let interior_points = grid.find_interior_points(point, exterior_point);
         println!("interior_points {interior_points:?}");
 
-        let point = Position {x: 1, y: 1, z: 1};
+        let point = Position { x: 1, y: 1, z: 1 };
         let interior_points = grid.find_interior_points(point, exterior_point);
         match interior_points {
             VisitedPositions::Interior(_) => assert!(false),
